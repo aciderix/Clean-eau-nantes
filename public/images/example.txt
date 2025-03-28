@@ -1,0 +1,2 @@
+Ceci est un exemple de fichier pour tester l'accès au dossier public/images.
+Pour que les images fonctionnent, vous devez y ajouter de vraies images (png, jpg, svg, etc.).
