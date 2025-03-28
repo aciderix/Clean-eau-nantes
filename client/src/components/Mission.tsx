@@ -2,7 +2,6 @@ import React from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
-import { getMissions } from '@/lib/api';
 
 const MissionCard: React.FC<{
   icon: string;
@@ -28,9 +27,16 @@ const MissionCard: React.FC<{
 };
 
 const Mission: React.FC = () => {
-  // Fetch missions from API
-  const { data: missions, isLoading } = useQuery({
+  // Fetch missions from API avec URL absolue
+  const { data: missions, isLoading, error } = useQuery({
     queryKey: ['/api/missions'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/missions');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des missions');
+      }
+      return response.json();
+    }
   });
   
   return (
@@ -51,9 +57,14 @@ const Mission: React.FC = () => {
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               </div>
             ))
+          ) : error ? (
+            // Affichage des erreurs
+            <div className="col-span-3 text-center text-red-500">
+              Une erreur est survenue lors du chargement des missions
+            </div>
           ) : (
             // Actual content
-            missions?.map((mission, index) => (
+            missions?.map((mission: any, index: number) => (
               <MissionCard
                 key={mission.id}
                 icon={mission.icon}

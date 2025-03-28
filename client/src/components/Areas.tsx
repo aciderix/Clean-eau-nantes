@@ -3,7 +3,6 @@ import SectionTitle from './SectionTitle';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MapPin, Navigation, Compass, Globe } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getAreas } from '@/lib/api';
 
 // Type pour les zones d'intervention
 interface Area {
@@ -36,10 +35,16 @@ const Areas: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const isMobile = useIsMobile();
   
-  // Récupérer les données depuis l'API
-  const { data, isLoading } = useQuery({
+  // Récupérer les données depuis l'API avec URL absolue
+  const { data, isLoading, error } = useQuery({
     queryKey: ['/api/areas'],
-    queryFn: getAreas
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/areas');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des zones d\'intervention');
+      }
+      return response.json();
+    }
   });
 
   const areas = data || [];
@@ -110,6 +115,10 @@ const Areas: React.FC = () => {
         {isLoading ? (
           <div className="flex justify-center items-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500 py-8">
+            Une erreur est survenue lors du chargement des zones d'intervention
           </div>
         ) : (
           <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">

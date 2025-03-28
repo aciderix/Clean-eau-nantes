@@ -7,9 +7,16 @@ const Partners: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Récupérer les partenaires depuis l'API
+  // Récupérer les partenaires depuis l'API avec URL absolue
   const { data: partners = [], isLoading, error } = useQuery<Partner[]>({
     queryKey: ['/api/partners'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/partners');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des partenaires');
+      }
+      return response.json();
+    },
     staleTime: 60000, // 1 minute
   });
 
@@ -90,41 +97,51 @@ const Partners: React.FC = () => {
       <div className="container mx-auto px-4">
         <SectionTitle title="Nos Partenaires" />
         
-        <div 
-          ref={containerRef}
-          className={`mt-12 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-        >
-          <div className="text-center mb-10">
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              La réussite de nos actions repose sur la collaboration avec différents acteurs engagés pour la protection de l'environnement.
-            </p>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {displayPartners.map((partner) => (
-              <a 
-                key={partner.id}
-                href={partner.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white rounded-lg shadow-sm p-4 flex items-center justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1"
-              >
-                <img 
-                  src={partner.logo} 
-                  alt={`Logo ${partner.name}`} 
-                  className="max-w-full max-h-20 object-contain" 
-                />
+        ) : error ? (
+          <div className="text-center text-red-500 py-8">
+            Une erreur est survenue lors du chargement des partenaires
+          </div>
+        ) : (
+          <div 
+            ref={containerRef}
+            className={`mt-12 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+          >
+            <div className="text-center mb-10">
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                La réussite de nos actions repose sur la collaboration avec différents acteurs engagés pour la protection de l'environnement.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {displayPartners.map((partner) => (
+                <a 
+                  key={partner.id}
+                  href={partner.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-lg shadow-sm p-4 flex items-center justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                >
+                  <img 
+                    src={partner.logo} 
+                    alt={`Logo ${partner.name}`} 
+                    className="max-w-full max-h-20 object-contain" 
+                  />
+                </a>
+              ))}
+            </div>
+            
+            <div className="mt-12 text-center">
+              <p className="text-primary font-medium mb-6">Vous souhaitez devenir partenaire de C.L.E.A.N. ?</p>
+              <a href="#contact" className="inline-block bg-primary hover:bg-blue-800 text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300">
+                Contactez-nous
               </a>
-            ))}
+            </div>
           </div>
-          
-          <div className="mt-12 text-center">
-            <p className="text-primary font-medium mb-6">Vous souhaitez devenir partenaire de C.L.E.A.N. ?</p>
-            <a href="#contact" className="inline-block bg-primary hover:bg-blue-800 text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300">
-              Contactez-nous
-            </a>
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );

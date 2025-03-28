@@ -2,7 +2,6 @@ import React from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
-import { getActivities } from '@/lib/api';
 
 const ActivityCard: React.FC<{
   image: string;
@@ -53,9 +52,16 @@ const ActivityCard: React.FC<{
 };
 
 const Activities: React.FC = () => {
-  // Fetch activities from API
-  const { data: activities, isLoading } = useQuery({
+  // Fetch activities from API avec URL absolue
+  const { data: activities, isLoading, error } = useQuery({
     queryKey: ['/api/activities'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/activities');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des activités');
+      }
+      return response.json();
+    }
   });
   
   return (
@@ -79,9 +85,14 @@ const Activities: React.FC = () => {
                 </div>
               </div>
             ))
+          ) : error ? (
+            // Affichage des erreurs
+            <div className="text-center text-red-500 py-8">
+              Une erreur est survenue lors du chargement des activités
+            </div>
           ) : (
             // Actual content
-            activities?.map((activity, index) => (
+            activities?.map((activity: any, index: number) => (
               <ActivityCard
                 key={activity.id}
                 image={activity.image}

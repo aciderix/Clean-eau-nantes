@@ -2,7 +2,6 @@ import React from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
-import { getEvents } from '@/lib/api';
 
 const EventCard: React.FC<{
   status: string;
@@ -51,9 +50,16 @@ const EventCard: React.FC<{
 };
 
 const Events: React.FC = () => {
-  // Fetch events from API
-  const { data: events, isLoading } = useQuery({
+  // Fetch events from API avec URL absolue
+  const { data: events, isLoading, error } = useQuery({
     queryKey: ['/api/events'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/events');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des événements');
+      }
+      return response.json();
+    }
   });
   
   return (
@@ -78,9 +84,14 @@ const Events: React.FC = () => {
                 </div>
               </div>
             ))
+          ) : error ? (
+            // Affichage des erreurs
+            <div className="col-span-3 text-center text-red-500">
+              Une erreur est survenue lors du chargement des événements
+            </div>
           ) : (
             // Actual content
-            events?.map((event, index) => (
+            events?.map((event: any, index: number) => (
               <EventCard
                 key={event.id}
                 status={event.status}
