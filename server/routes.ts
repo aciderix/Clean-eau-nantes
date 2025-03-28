@@ -22,6 +22,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'ok' });
   });
 
+  // Route principale pour récupérer tout le contenu du site
+  app.get('/api/content', async (_req, res) => {
+    try {
+      const [
+        approachItems,
+        events,
+        missions,
+        activities,
+        partners,
+        areas,
+        aboutContent,
+        contactInfo
+      ] = await Promise.all([
+        storage.getApproachItems(),
+        storage.getEvents(),
+        storage.getMissions(),
+        storage.getActivities(),
+        storage.getPartners(),
+        storage.getAreas(),
+        storage.getAboutContent(),
+        storage.getContactInfo()
+      ]);
+
+      res.json({
+        approaches: approachItems || [],
+        events: events || [],
+        missions: missions || [],
+        activities: activities || [],
+        partners: partners || [],
+        areas: areas || [],
+        about: aboutContent,
+        contact: contactInfo,
+        supportOptions: [] // à implémenter si nécessaire
+      });
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      res.status(500).json({ message: 'Failed to fetch content' });
+    }
+  });
+
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
