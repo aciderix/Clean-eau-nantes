@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
-import { getApproachItems } from '@/lib/api';
 
 const ApproachCard: React.FC<{
   icon: string;
@@ -28,26 +27,21 @@ const ApproachCard: React.FC<{
 };
 
 const Approach: React.FC = () => {
-  // Fetch approach items from API
+  // Fetch approach items from API avec URL absolue
   const { data: approachItems, isLoading, error } = useQuery({
     queryKey: ['/api/approach-items'],
-    queryFn: getApproachItems
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/approach-items');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des données');
+      }
+      return response.json();
+    }
   });
   
   console.log('approachItems:', approachItems);
   console.log('isLoading:', isLoading);
   console.log('error:', error);
-  
-  useEffect(() => {
-    fetch('/api/approach-items')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fetch direct:', data);
-      })
-      .catch(error => {
-        console.error('Erreur fetch direct:', error);
-      });
-  }, []);
   
   return (
     <section id="approach" className="py-24 px-4 bg-gradient-to-b from-gray-50 to-light-green">
@@ -66,6 +60,11 @@ const Approach: React.FC = () => {
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               </div>
             ))
+          ) : error ? (
+            // Affichage des erreurs
+            <div className="col-span-3 text-center text-red-500">
+              Une erreur est survenue lors du chargement des données
+            </div>
           ) : (
             // Actual content
             approachItems?.map((item: any, index: number) => (
