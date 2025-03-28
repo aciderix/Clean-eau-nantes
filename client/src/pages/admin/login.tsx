@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
-import { loginUser } from '@/lib/api';
+import { apiRequest } from '@/lib/queryClient';
 
 const AdminLogin: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -18,7 +18,20 @@ const AdminLogin: React.FC = () => {
   
   // Login mutation
   const loginMutation = useMutation({
-    mutationFn: () => loginUser(credentials.username, credentials.password),
+    mutationFn: async () => {
+      try {
+        return await apiRequest('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: credentials.username,
+            password: credentials.password
+          }),
+        });
+      } catch (error) {
+        console.error('Erreur de connexion:', error);
+        throw new Error('Identifiants invalides');
+      }
+    },
     onSuccess: (data) => {
       // In a real app, we would set a proper auth token
       localStorage.setItem('authToken', 'some-token');
