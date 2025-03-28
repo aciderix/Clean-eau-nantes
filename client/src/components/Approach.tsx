@@ -31,6 +31,7 @@ const Approach: React.FC = () => {
   // Fetch approach items from API
   const { data: approachItems, isLoading } = useQuery({
     queryKey: ['/api/approach-items'],
+    queryFn: getApproachItems
   });
   
   return (

@@ -24,7 +24,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Route principale pour récupérer tout le contenu du site
   app.get('/api/content', async (_req, res) => {
+    console.log('API /api/content appelée');
     try {
+      console.log('Récupération des données...');
+      
+      // Récupérer et logger chaque type de donnée individuellement avec try/catch
+      try {
+        const approachItems = await storage.getApproachItems();
+        console.log('ApproachItems récupérés:', approachItems ? approachItems.length : 0);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des approachItems:', error);
+      }
+      
+      try {
+        const events = await storage.getEvents();
+        console.log('Events récupérés:', events ? events.length : 0);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des events:', error);
+      }
+      
+      try {
+        const missions = await storage.getMissions();
+        console.log('Missions récupérées:', missions ? missions.length : 0);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des missions:', error);
+      }
+      
+      try {
+        const aboutContent = await storage.getAboutContent();
+        console.log('AboutContent récupéré:', aboutContent);
+      } catch (error) {
+        console.error('Erreur lors de la récupération de aboutContent:', error);
+      }
+      
+      // Récupérer toutes les données pour la réponse
       const [
         approachItems,
         events,
@@ -45,6 +78,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getContactInfo()
       ]);
 
+      console.log('Données récupérées avec succès');
+      console.log('ApproachItems:', approachItems ? JSON.stringify(approachItems).substring(0, 100) + '...' : 'null');
+      console.log('Events:', events ? JSON.stringify(events).substring(0, 100) + '...' : 'null');
+      console.log('Missions:', missions ? JSON.stringify(missions).substring(0, 100) + '...' : 'null');
+      console.log('AboutContent:', aboutContent ? JSON.stringify(aboutContent).substring(0, 100) + '...' : 'null');
+      console.log('ContactInfo:', contactInfo ? JSON.stringify(contactInfo).substring(0, 100) + '...' : 'null');
+
       res.json({
         approaches: approachItems || [],
         events: events || [],
@@ -52,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activities: activities || [],
         partners: partners || [],
         areas: areas || [],
-        about: aboutContent,
+        about: aboutContent, 
         contact: contactInfo,
         supportOptions: [] // à implémenter si nécessaire
       });
@@ -64,15 +104,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
+    console.log('API /api/auth/login appelée avec:', req.body);
     const { username, password } = req.body;
     
     try {
       const user = await storage.getUserByUsername(username);
+      console.log('Utilisateur trouvé:', user ? 'Oui' : 'Non');
       
       if (!user || user.password !== password) {
+        console.log('Authentification échouée');
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
+      console.log('Authentification réussie pour:', username);
       // In a real app, you'd use proper authentication with sessions or tokens
       res.json({ 
         id: user.id,
@@ -80,6 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isAdmin: user.isAdmin
       });
     } catch (error) {
+      console.error('Error in auth:', error);
       res.status(500).json({ message: 'Server error' });
     }
   });
