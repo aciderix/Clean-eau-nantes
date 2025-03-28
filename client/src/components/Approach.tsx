@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
@@ -29,10 +29,25 @@ const ApproachCard: React.FC<{
 
 const Approach: React.FC = () => {
   // Fetch approach items from API
-  const { data: approachItems, isLoading } = useQuery({
+  const { data: approachItems, isLoading, error } = useQuery({
     queryKey: ['/api/approach-items'],
     queryFn: getApproachItems
   });
+  
+  console.log('approachItems:', approachItems);
+  console.log('isLoading:', isLoading);
+  console.log('error:', error);
+  
+  useEffect(() => {
+    fetch('/api/approach-items')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Fetch direct:', data);
+      })
+      .catch(error => {
+        console.error('Erreur fetch direct:', error);
+      });
+  }, []);
   
   return (
     <section id="approach" className="py-24 px-4 bg-gradient-to-b from-gray-50 to-light-green">
@@ -53,7 +68,7 @@ const Approach: React.FC = () => {
             ))
           ) : (
             // Actual content
-            approachItems?.map((item, index) => (
+            approachItems?.map((item: any, index: number) => (
               <ApproachCard
                 key={item.id}
                 icon={item.icon}
