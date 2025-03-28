@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getContactInfo, submitContactForm } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const Contact: React.FC = () => {
@@ -10,9 +9,16 @@ const Contact: React.FC = () => {
   const [formRef, isFormVisible] = useIntersectionObserver<HTMLDivElement>();
   const { toast } = useToast();
   
-  // Fetch contact info from API
-  const { data: contactInfo } = useQuery({
+  // Fetch contact info from API avec URL absolue
+  const { data: contactInfo, error: contactError } = useQuery({
     queryKey: ['/api/contact-info'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/contact-info');
+      if (!response.ok) {
+        throw new Error('Échec de chargement des informations de contact');
+      }
+      return response.json();
+    }
   });
   
   // Form state
@@ -25,7 +31,21 @@ const Contact: React.FC = () => {
   
   // Handle form submission
   const submitMutation = useMutation({
-    mutationFn: submitContactForm,
+    mutationFn: async (data: typeof formData) => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/contact-submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Échec de l\'envoi du formulaire');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Message envoyé",
@@ -70,38 +90,46 @@ const Contact: React.FC = () => {
               ref={infoRef}
               className={`p-8 bg-white rounded-lg shadow-md ${isInfoVisible ? 'show-element' : 'hidden-element'}`}
             >
-              <h3 className="text-2xl font-semibold mb-6 text-dark-blue">Prenons contact</h3>
-              <p className="mb-8 text-gray-600">Vous souhaitez en savoir plus sur nos actions, participer à nos événements ou proposer un partenariat ? N'hésitez pas à nous contacter, nous vous répondrons dans les plus brefs délais.</p>
-              
-              <div className="flex items-start mb-6">
-                <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
-                  <i className="fas fa-envelope"></i>
+              {contactError ? (
+                <div className="text-center text-red-500 py-4">
+                  Une erreur est survenue lors du chargement des informations de contact
                 </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Email</h4>
-                  <p className="text-gray-600">{contactInfo?.email || 'contact@clean-nantes.org'}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start mb-6">
-                <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
-                  <i className="fas fa-phone"></i>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Téléphone</h4>
-                  <p className="text-gray-600">{contactInfo?.phone || '+33 (0)6 XX XX XX XX'}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
-                  <i className="fas fa-map-marker-alt"></i>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Adresse</h4>
-                  <p className="text-gray-600">{contactInfo?.address || 'Nantes, France'}</p>
-                </div>
-              </div>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-semibold mb-6 text-dark-blue">Prenons contact</h3>
+                  <p className="mb-8 text-gray-600">Vous souhaitez en savoir plus sur nos actions, participer à nos événements ou proposer un partenariat ? N'hésitez pas à nous contacter, nous vous répondrons dans les plus brefs délais.</p>
+                  
+                  <div className="flex items-start mb-6">
+                    <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
+                      <i className="fas fa-envelope"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-lg mb-1">Email</h4>
+                      <p className="text-gray-600">{contactInfo?.email || 'contact@clean-nantes.org'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start mb-6">
+                    <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
+                      <i className="fas fa-phone"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-lg mb-1">Téléphone</h4>
+                      <p className="text-gray-600">{contactInfo?.phone || '+33 (0)6 XX XX XX XX'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="w-10 h-10 flex-shrink-0 bg-light-blue rounded-full flex items-center justify-center text-primary mr-4">
+                      <i className="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-lg mb-1">Adresse</h4>
+                      <p className="text-gray-600">{contactInfo?.address || 'Nantes, France'}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           

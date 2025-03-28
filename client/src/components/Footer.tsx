@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { subscribeToNewsletter } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin, Send, Facebook, Twitter, Instagram } from 'lucide-react';
 
@@ -10,7 +9,21 @@ const Footer: React.FC = () => {
   
   // Handle newsletter subscription
   const subscribeMutation = useMutation({
-    mutationFn: subscribeToNewsletter,
+    mutationFn: async (email: string) => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/newsletter-subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Échec de l\'inscription à la newsletter');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Inscription réussie",

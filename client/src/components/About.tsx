@@ -2,15 +2,21 @@ import React from 'react';
 import SectionTitle from './SectionTitle';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver.tsx';
 import { useQuery } from '@tanstack/react-query';
-import { getAboutContent } from '@/lib/api';
 
 const About: React.FC = () => {
   const [textRef, isTextVisible] = useIntersectionObserver<HTMLDivElement>();
   const [imageRef, isImageVisible] = useIntersectionObserver<HTMLDivElement>();
   
-  // Fetch about content from API
-  const { data: aboutContent, isLoading } = useQuery({
+  // Fetch about content from API avec URL absolue
+  const { data: aboutContent, isLoading, error } = useQuery({
     queryKey: ['/api/about-content'],
+    queryFn: async () => {
+      const response = await fetch('https://clean-eau-nantes.onrender.com/api/about-content');
+      if (!response.ok) {
+        throw new Error('Échec de chargement du contenu À propos');
+      }
+      return response.json();
+    }
   });
   
   // Function to render HTML content safely
@@ -35,6 +41,10 @@ const About: React.FC = () => {
                 <div className="h-4 bg-gray-200 rounded mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-500">
+                Une erreur est survenue lors du chargement du contenu
               </div>
             ) : (
               <>
